@@ -7,10 +7,14 @@
  */
 namespace Forgemaster;
 
+require_once 'CurlCache.php';
 require_once 'CurseClient.php';
 
 $client = new CurseClient();
 $data = $client->getMinecraftVersions();
+$data = $client->getLatestMinecraft();
+
+$data = $client->testGet($data->url);
 print_r($data);
 exit;
 

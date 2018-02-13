@@ -15,9 +15,19 @@ class CurseClient
     protected $_baseUrl = "https://minecraft.curseforge.com/api/";
     protected $_mcVersions = 'https://launchermeta.mojang.com/mc/game/version_manifest.json';
 
+    public function getLatestMinecraft($forceFlush = false){
+        $versions = $this->getMinecraftVersions();
+        $release = $versions->latest->release;
+        foreach($versions->versions as $key=>$version){
+            if($version->id==$release) return $version;
+        }
 
-    public function getMinecraftVersions(){
-        $data = json_decode($this->curlGet($this->_mcVersions));
+        return null;
+    }
+
+
+    public function getMinecraftVersions($forceFlush = false){
+        $data = json_decode($this->curlGet($this->_mcVersions, $forceFlush));
         return $data;
     }
 
@@ -40,7 +50,11 @@ class CurseClient
 
     }
 
-    protected function curlGet($url){
+    protected function curlGet($url, $forceFlush = false){
+        $data = CurlCache::get($url);
+
+        if($data && !$forceFlush) return $data;
+
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);
 
@@ -52,6 +66,7 @@ class CurseClient
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         $output = curl_exec($ch);
         curl_close($ch);
+        CurlCache::put($url, $output);
         return $output;
     }
 }
