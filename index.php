@@ -9,13 +9,18 @@ namespace Forgemaster;
 
 require_once 'CurlCache.php';
 require_once 'CurseClient.php';
+require_once 'CursePackage.php';
+require_once 'CurseDOM.php';
 
 $client = new CurseClient();
-$data = $client->getMinecraftVersions();
-$data = $client->getLatestMinecraft();
+//$data = $client->getModCategories();
+$data = $client->searchMods("ender-io");
 
-$data = $client->testGet($data->url);
-print_r($data);
+$slug = $data[0]['slug'];
+echo "Get slug $slug\n";
+$pkg = CursePackage::load($data[0]['slug']);
+$deps = $pkg->getDependencies();
+print_r($deps);
 exit;
 
 //$data = $client->testGet('https://minecraft.curseforge.com/api/projects/energysynergy/relations/dependencies');

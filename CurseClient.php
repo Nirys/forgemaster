@@ -12,8 +12,16 @@ namespace Forgemaster;
 class CurseClient
 {
     protected $_token = '2e251f73-64dd-4fd5-aaf2-53c1a862b836';
-    protected $_baseUrl = "https://minecraft.curseforge.com/api/";
+    protected $_baseUrl = "https://minecraft.curseforge.com/";
     protected $_mcVersions = 'https://launchermeta.mojang.com/mc/game/version_manifest.json';
+    protected static $_instance = null;
+
+    public static function instance(){
+        if(self::$_instance===null){
+            self::$_instance = new self();
+        }
+        return self::$_instance;
+    }
 
     public function getLatestMinecraft($forceFlush = false){
         $versions = $this->getMinecraftVersions();
@@ -25,6 +33,35 @@ class CurseClient
         return null;
     }
 
+    public function getModCategories($forceFlush = false){
+        $data = $this->curlGet($this->_baseUrl . "mc-mods", $forceFlush);
+        print_r($data);
+    }
+
+    public function searchMods($query, $forceFlush = false){
+        $url = $this->_baseUrl . "search?search=" . urlencode($query);
+        $result = $this->curlGet($url);
+
+        $result = str_replace("\r\n","", $result);
+        preg_match_all("/results-name[^<]+<[^\"]+\"([^\"]+)\">([^<]+)<.+?\"results-summary\">([^<]+)</", $result, $matches);
+
+        $data = array();
+        foreach($matches[1] as $key => $url){
+            preg_match("/projects\/([^\?]+?)\?.+projectID=(.+)/", $url, $matched);
+            $projectId = $matched[2];
+            $slug = $matched[1];
+
+            $data[]= array(
+                'url' => $url,
+                'projectId' => $projectId,
+                'slug' => $slug,
+                'name' => $matches[2][$key],
+                'description' => ltrim(rtrim($matches[3][$key]))
+            );
+        }
+        return $data;
+    }
+
 
     public function getMinecraftVersions($forceFlush = false){
         $data = json_decode($this->curlGet($this->_mcVersions, $forceFlush));
@@ -32,22 +69,26 @@ class CurseClient
     }
 
     public function getVersions(){
-        $data = json_decode($this->curlGet($this->_baseUrl . 'game/versions'));
+        $data = json_decode($this->curlGet($this->_baseUrl . 'api/game/versions'));
         return $data;
     }
 
     public function getDependencies(){
-        $data = $this->curlGet($this->_baseUrl . 'game/dependencies');
+        $data = $this->curlGet($this->_baseUrl . 'api/game/dependencies');
         return $data;
     }
 
     public function getPackageVersions($package){
-        return $this->curlGet($this->_baseUrl . 'projects/' . $package . '/versions');
+        return $this->curlGet($this->_baseUrl . 'api/projects/' . $package . '/versions');
     }
 
     public function testGet($url){
         return $this->curlGet($url);
 
+    }
+
+    public function abstractGet($url, $forceFlush = false){
+        return $this->curlGet($this->_baseUrl . $url, $forceFlush);
     }
 
     protected function curlGet($url, $forceFlush = false){
