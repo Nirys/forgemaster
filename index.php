@@ -12,24 +12,27 @@ require_once 'CurseClient.php';
 require_once 'CursePackage.php';
 require_once 'CurseDOM.php';
 
-$client = new CurseClient();
-//$data = $client->getModCategories();
-$data = $client->searchMods("ender-io");
+$MCVersion = '1.7.4';
 
-$slug = $data[0]['slug'];
-echo "Get slug $slug\n";
-$pkg = CursePackage::load($data[0]['slug']);
-$deps = $pkg->getDependencies();
-print_r($deps);
+$Mods = array('ender-io','chisel');
+
+$client = new CurseClient();
+$results = $client->searchMods('applied energistics');
+print_r($results);
+die;
+//$data = $client->getModCategories();
+$ver = $client->getMinecraftVersions();
+$types = array();
+foreach($ver as $version){
+    if(!in_array($version->type, $types)) $types[] = $version->type;
+    if($version->type=='release' || $version->type=='snapshot'){
+        if($version->type !== 'release') echo '* ';
+        echo $version->id . "\n";
+    }
+}
 exit;
 
 //$data = $client->testGet('https://minecraft.curseforge.com/api/projects/energysynergy/relations/dependencies');
 //$data = $client->getDependencies();
 //print_r($data);
 //$data = $client->getPackageVersions("smeltcycle");//chisel");
-
-$url = "https://api.twitch.tv/helix/games?name=minecraft";
-$data = $client->testGet($url);
-
-print_r($data);
-echo "le chisel";

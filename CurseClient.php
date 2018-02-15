@@ -65,7 +65,7 @@ class CurseClient
 
     public function getMinecraftVersions($forceFlush = false){
         $data = json_decode($this->curlGet($this->_mcVersions, $forceFlush));
-        return $data;
+        return $data->versions;
     }
 
     public function getVersions(){
@@ -85,6 +85,10 @@ class CurseClient
     public function testGet($url){
         return $this->curlGet($url);
 
+    }
+
+    public function getDOM($url, $forceFlush = false){
+        return CurseDOM::fromHTML($this->abstractGet($url, $forceFlush));
     }
 
     public function abstractGet($url, $forceFlush = false){
